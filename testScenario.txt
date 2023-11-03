@@ -18,3 +18,7 @@ for _, campaign := range campaignsByUserid {
     }
 
 }
+
+-- test serivce
+campaign, _ := campaignService.GetCampaigns(11)
+fmt.Println(len(campaign))
