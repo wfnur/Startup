@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"startup/campaign"
 	"startup/helper"
+	"startup/user"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -51,4 +52,31 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 
 	response := helper.APIResponse("Campaign detail", http.StatusOK, "success", campaign.FormatCampaignDetail(campaignDetail))
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *campaignHandler) CreateCampaign(c *gin.Context) {
+	var input campaign.CreateCampaignInput
+	currentUser := c.MustGet("CurrentUser").(user.User)
+	input.User = currentUser
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.ErrorValidationFormatter(err)
+		errMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Create Campaign Failed in Binding Json", http.StatusUnprocessableEntity, "Error", errMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	newCampaign, err := h.service.CreateCampaign(input)
+	if err != nil {
+		response := helper.APIResponse("Failed save campaign", http.StatusBadRequest, "Error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := helper.APIResponse("Success to save campaign", http.StatusOK, "success", campaign.FormatCampaign(newCampaign))
+	c.JSON(http.StatusOK, response)
+
 }
